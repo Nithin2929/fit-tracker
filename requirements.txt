@@ -1,0 +1,8 @@
+# Backend web framework
+Flask>=3.0,<4.0
+
+# Official Oracle driver for MySQL
+mysql-connector-python>=9.0,<10.0
+
+# Loads variables from the local .env file
+python-dotenv>=1.0,<2.0

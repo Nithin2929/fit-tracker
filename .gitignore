@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+build/
+dist/
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Local secrets - never commit this file
+.env
+
+# Flask instance folder (uploads, local database files, etc.)
+instance/
+
+# Testing and tools
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# VS Code workspace settings (optional to ignore)
+# .vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini

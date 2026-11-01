@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} — FitTrack{% endblock %}
+{% block description %}{{ page_summary }}{% endblock %}
+
+{% block content %}
+<section class="soon-wrap">
+  <div class="container">
+    <div class="soon-card">
+      <span class="soon-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8v5l3 2"/>
+          <circle cx="12" cy="12" r="9"/>
+        </svg>
+      </span>
+
+      <span class="eyebrow">Coming in the next step</span>
+      <h1>{{ page_title }}</h1>
+      <p>{{ page_summary }}</p>
+      <p style="margin-top: 0.8rem;">
+        The shared layout, navigation and Home page are complete. Each remaining
+        page is built one step at a time so you can run and test it before moving on.
+      </p>
+
+      <div class="soon-actions">
+        <a class="btn btn-primary" href="{{ url_for('main.home') }}">Back to home</a>
+        <a class="btn btn-outline" href="{{ url_for('main.db_check') }}">Check database</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

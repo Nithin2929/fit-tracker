@@ -1,0 +1,123 @@
+{% macro brand_mark() -%}
+<span class="brand-mark" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M6.5 6.5v11M3.5 9.5v5M17.5 6.5v11M20.5 9.5v5M6.5 12h11"/>
+  </svg>
+</span>
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0e13">
+  <title>{% block title %}FitTrack — Fitness &amp; Wellness Tracking{% endblock %}</title>
+  <meta name="description" content="{% block description %}Track workouts, nutrition, health metrics and progress reports in one modern fitness dashboard.{% endblock %}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" data-header>
+    <div class="container nav-wrap">
+      <a class="brand" href="{{ url_for('main.home') }}" aria-label="FitTrack home">
+        {{ brand_mark() }}
+        <span class="brand-name">Fit<span>Track</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" data-nav-toggle
+              aria-controls="primary-nav" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" data-nav aria-label="Primary">
+        <ul class="nav-list">
+          <li>
+            <a class="nav-link {{ 'is-active' if request.endpoint == 'main.home' else '' }}"
+               href="{{ url_for('main.home') }}">Home</a>
+          </li>
+          <li>
+            <a class="nav-link {{ 'is-active' if request.view_args and request.view_args.get('page') == 'dashboard' else '' }}"
+               href="{{ url_for('main.coming_soon', page='dashboard') }}">Dashboard</a>
+          </li>
+          <li>
+            <a class="nav-link {{ 'is-active' if request.view_args and request.view_args.get('page') == 'workouts' else '' }}"
+               href="{{ url_for('main.coming_soon', page='workouts') }}">Workouts</a>
+          </li>
+          <li>
+            <a class="nav-link {{ 'is-active' if request.view_args and request.view_args.get('page') == 'nutrition' else '' }}"
+               href="{{ url_for('main.coming_soon', page='nutrition') }}">Nutrition</a>
+          </li>
+          <li>
+            <a class="nav-link {{ 'is-active' if request.view_args and request.view_args.get('page') == 'health' else '' }}"
+               href="{{ url_for('main.coming_soon', page='health') }}">Health</a>
+          </li>
+          <li>
+            <a class="nav-link {{ 'is-active' if request.view_args and request.view_args.get('page') == 'reports' else '' }}"
+               href="{{ url_for('main.coming_soon', page='reports') }}">Reports</a>
+          </li>
+        </ul>
+
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="{{ url_for('main.coming_soon', page='login') }}">Log in</a>
+          <a class="btn btn-primary" href="{{ url_for('main.coming_soon', page='register') }}">Get started</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="{{ url_for('main.home') }}" aria-label="FitTrack home">
+          {{ brand_mark() }}
+          <span class="brand-name">Fit<span>Track</span></span>
+        </a>
+        <p class="footer-blurb">
+          One clear place for your workouts, meals, health metrics and progress.
+          Built for people who want their data to work for them.
+        </p>
+        <p class="footer-note">Built with Flask, MySQL, HTML, CSS and JavaScript.</p>
+      </div>
+
+      <div>
+        <h2 class="footer-title">Product</h2>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('main.coming_soon', page='dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('main.coming_soon', page='workouts') }}">Workout tracking</a></li>
+          <li><a href="{{ url_for('main.coming_soon', page='nutrition') }}">Nutrition tracking</a></li>
+          <li><a href="{{ url_for('main.coming_soon', page='reports') }}">Progress reports</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="footer-title">Account</h2>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('main.coming_soon', page='register') }}">Create an account</a></li>
+          <li><a href="{{ url_for('main.coming_soon', page='login') }}">Log in</a></li>
+          <li><a href="{{ url_for('main.coming_soon', page='health') }}">Health metrics</a></li>
+          <li><a href="{{ url_for('main.db_check') }}">Database status</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; <span data-year>2026</span> FitTrack. College industry project.</p>
+      <p>Fitness &amp; Wellness Tracking Database System</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
