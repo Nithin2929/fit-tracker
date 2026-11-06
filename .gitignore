@@ -1,42 +1,4 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-build/
-dist/
-*.egg-info/
-
-# Virtual environment
 .venv/
-venv/
-env/
-
-# Local secrets - never commit these files
+__pycache__/
+*.pyc
 .env
-.env.*
-!.env.example
-
-# Aiven TLS certificates and any private key material
-certs/*.pem
-certs/*.crt
-certs/*.key
-certs/*.pfx
-certs/*.p12
-
-# Flask instance folder (uploads, local files, etc.)
-instance/
-
-# Testing and tools
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Logs
-*.log
-
-# VS Code workspace settings (optional to ignore)
-# .vscode/
-
-# Windows
-Thumbs.db
-Desktop.ini
