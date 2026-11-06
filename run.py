@@ -1,15 +1,55 @@
 """Flask application entry point.
 
-Run the development server with:
+Start the development server with:
 
-    .\.venv\Scripts\python.exe run.py
+    .\\.venv\\Scripts\\python.exe run.py
 
-Then open http://127.0.0.1:5000 in your browser.
+The app validates the Aiven MySQL configuration and verifies the live database
+connection before the web server starts. There is no local database fallback.
 """
 
-from app import create_app
+import sys
 
-app = create_app()
+from app import create_app
+from app.db import DatabaseError, verify_connection
+from config import ConfigurationError, validate_config
+
+
+def main():
+    app = create_app()
+
+    # 1. Validate environment variables before serving any request.
+    try:
+        validate_config(app)
+    except ConfigurationError as error:
+        print("\nFitTrack configuration error\n" + "=" * 32)
+        print(error)
+        print("\nThe server was not started.")
+        return 1
+
+    # 2. Verify the Aiven database is reachable and TLS is working.
+    try:
+        with app.app_context():
+            details = verify_connection()
+    except DatabaseError as error:
+        print("\nFitTrack could not verify Aiven MySQL\n" + "=" * 40)
+        print(error)
+        print("\nThe server was not started. Run `python check_db.py` for details.")
+        return 1
+
+    print("\nAiven MySQL connection verified.")
+    print(f"  Database : {details['database']}")
+    print(f"  Server   : {details['server_version']}")
+    print(f"  TLS      : {details['ssl_cipher'] or 'cipher not reported, TLS handshake OK'}")
+
+    # 3. Start the Flask development server. Debug must be enabled explicitly
+    # through FLASK_DEBUG=true and must never be used in production.
+    host = app.config.get("APP_HOST") or "127.0.0.1"
+    port = int(app.config.get("APP_PORT") or 5000)
+    print(f"\nStarting FitTrack at http://{host}:{port}\n")
+    app.run(host=host, port=port, debug=app.config.get("DEBUG", False))
+    return 0
+
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    sys.exit(main())

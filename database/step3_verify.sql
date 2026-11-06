@@ -3,7 +3,9 @@
 -- File:    database/step3_verify.sql
 -- Purpose: Check the three Step 3 tables and display sample results.
 --
--- Run AFTER database/step3_tables.sql and database/step3_sample_data.sql.
+-- AIVEN:
+--   Run this against the online Aiven database after database/aiven_init.sql.
+--   It only reads metadata and rows; it never changes data.
 -- ============================================================================
 
 USE fitness_wellness_db;
@@ -23,7 +25,7 @@ SELECT '2. COLUMNS' AS section;
 
 SELECT table_name, column_name, column_type, is_nullable, column_key
 FROM information_schema.columns
-WHERE table_schema = 'fitness_wellness_db'
+WHERE table_schema = DATABASE()
   AND table_name IN ('workouts', 'nutrition_logs', 'health_metrics')
 ORDER BY table_name, ordinal_position;
 
@@ -36,7 +38,7 @@ SELECT '3. FOREIGN KEYS' AS section;
 SELECT table_name, constraint_name, column_name,
        referenced_table_name, referenced_column_name
 FROM information_schema.key_column_usage
-WHERE table_schema = 'fitness_wellness_db'
+WHERE table_schema = DATABASE()
   AND referenced_table_name IS NOT NULL
 ORDER BY table_name, constraint_name;
 
@@ -48,7 +50,7 @@ SELECT '4. UNIQUE CONSTRAINTS' AS section;
 
 SELECT table_name, constraint_name
 FROM information_schema.table_constraints
-WHERE table_schema = 'fitness_wellness_db'
+WHERE table_schema = DATABASE()
   AND constraint_type = 'UNIQUE'
 ORDER BY table_name, constraint_name;
 
@@ -62,7 +64,7 @@ FROM information_schema.table_constraints AS tc
 JOIN information_schema.check_constraints AS cc
   ON cc.constraint_schema = tc.constraint_schema
  AND cc.constraint_name = tc.constraint_name
-WHERE tc.table_schema = 'fitness_wellness_db'
+WHERE tc.table_schema = DATABASE()
   AND tc.constraint_type = 'CHECK'
 ORDER BY tc.table_name, tc.constraint_name;
 

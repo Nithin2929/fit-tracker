@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise catalogue — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Exercise library</span>
+        <h1>Exercise catalogue</h1>
+        <p class="page-sub">
+          Shared reference data for structured, multi-exercise workouts.
+        </p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('workouts.index') }}">Back to workouts</a>
+        {% if available %}
+          <a class="btn btn-primary" href="{{ url_for('exercises.create') }}">Add exercise</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if not available %}
+      <div class="panel">
+        <div class="notice">
+          <strong>Migration required</strong>
+          <p>{{ notice }}</p>
+          <p class="field-hint">
+            Nothing was changed in the live database. The existing workout pages
+            keep using the original single-exercise field until the migration is
+            approved and executed.
+          </p>
+        </div>
+      </div>
+    {% else %}
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Catalogue</h2>
+            <p class="panel-note">Exercises used by current workouts cannot be deleted.</p>
+          </div>
+        </div>
+
+        {% if exercises %}
+          <div class="table-wrap">
+            <table class="data-table data-table--actions">
+              <thead>
+                <tr>
+                  <th>Exercise</th><th>Muscle group</th><th>Type</th>
+                  <th>Times used</th><th class="right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for exercise in exercises %}
+                  <tr>
+                    <td>
+                      <strong>{{ exercise.exercise_name }}</strong>
+                      {% if exercise.description %}
+                        <div class="muted">{{ exercise.description }}</div>
+                      {% endif %}
+                    </td>
+                    <td>{{ exercise.muscle_group or '—' }}</td>
+                    <td><span class="badge">{{ exercise.exercise_type }}</span></td>
+                    <td>{{ exercise.times_used }}</td>
+                    <td class="right">
+                      <div class="row-actions">
+                        <a class="link-quiet"
+                           href="{{ url_for('exercises.edit', exercise_id=exercise.exercise_id) }}">Edit</a>
+                        <form method="post"
+                              action="{{ url_for('exercises.delete', exercise_id=exercise.exercise_id) }}"
+                              onsubmit="return confirm('Delete this exercise? Exercises used by workouts cannot be deleted.');">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button class="link-danger" type="submit">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <strong>The catalogue is empty</strong>
+            <p>Add an exercise, then choose it when you record a workout.</p>
+            <a class="btn btn-primary" href="{{ url_for('exercises.create') }}">Add the first exercise</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

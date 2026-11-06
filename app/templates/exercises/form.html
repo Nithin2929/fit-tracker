@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit exercise' if mode == 'edit' else 'Add exercise' }} — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Exercise library</span>
+        <h1>{{ 'Edit exercise' if mode == 'edit' else 'Add an exercise' }}</h1>
+        <p class="page-sub">The catalogue is shared reference data for all workouts.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('exercises.index') }}">Back to catalogue</a>
+      </div>
+    </div>
+
+    <div class="panel panel--narrow">
+      <form class="form-grid" method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field">
+          <label for="exercise_name">Exercise name</label>
+          <input id="exercise_name" name="exercise_name" type="text" maxlength="100"
+                 value="{{ form.exercise_name }}" required placeholder="Barbell Squat">
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="muscle_group">Muscle group <span class="field-hint">(optional)</span></label>
+            <input id="muscle_group" name="muscle_group" type="text" maxlength="50"
+                   value="{{ form.muscle_group }}" placeholder="Legs">
+          </div>
+          <div class="field">
+            <label for="exercise_type">Exercise type</label>
+            <select id="exercise_type" name="exercise_type" required>
+              {% for option in exercise_types %}
+                <option value="{{ option }}" {{ 'selected' if form.exercise_type == option else '' }}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description <span class="field-hint">(optional)</span></label>
+          <textarea id="description" name="description" rows="3" maxlength="500"
+                    placeholder="Technique notes, equipment, or coaching cues.">{{ form.description }}</textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">{{ 'Save changes' if mode == 'edit' else 'Add exercise' }}</button>
+          <a class="btn btn-ghost" href="{{ url_for('exercises.index') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

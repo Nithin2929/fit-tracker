@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Workouts — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Workout tracking</span>
+        <h1>Your workouts</h1>
+        <p class="page-sub">All sessions stored in Aiven Cloud MySQL, visible only to you.</p>
+      </div>
+      <div class="page-actions">
+        {% if exercise_feature %}
+          <a class="btn btn-outline" href="{{ url_for('exercises.index') }}">Manage exercises</a>
+        {% endif %}
+        <a class="btn btn-primary" href="{{ url_for('workouts.create') }}">Add workout</a>
+      </div>
+    </div>
+
+    <div class="stat-grid stat-grid--tight">
+      <article class="stat-card">
+        <span class="stat-card-label">Sessions</span>
+        <span class="stat-card-value">{{ totals.count|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Total minutes</span>
+        <span class="stat-card-value">{{ totals.minutes|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Total calories</span>
+        <span class="stat-card-value">{{ totals.calories|display_number }}</span>
+      </article>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Workout history</h2>
+      </div>
+
+      {% if workouts %}
+        <div class="table-wrap">
+          <table class="data-table data-table--actions">
+            <thead>
+              <tr><th>Date</th><th>Exercise</th><th>Duration</th><th>Calories burned</th><th class="right">Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for workout in workouts %}
+                <tr>
+                  <td>{{ workout.workout_date|display_date }}</td>
+                  <td>
+                    {{ workout.exercise_list if workout.exercise_list else workout.exercise_name }}
+                    {% if workout.exercise_count %}
+                      <span class="badge">{{ workout.exercise_count }} exercise{{ '' if workout.exercise_count == 1 else 's' }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ workout.duration_minutes }} min</td>
+                  <td>{{ workout.calories_burned|display_number }}</td>
+                  <td class="right">
+                    <div class="row-actions">
+                      <a class="link-quiet" href="{{ url_for('workouts.edit', workout_id=workout.workout_id) }}">Edit</a>
+                      <form method="post" action="{{ url_for('workouts.delete', workout_id=workout.workout_id) }}"
+                            onsubmit="return confirm('Delete this workout?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="link-danger" type="submit">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <strong>No workouts recorded</strong>
+          <p>Start logging your sessions to see them here.</p>
+          <a class="btn btn-primary" href="{{ url_for('workouts.create') }}">Add your first workout</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

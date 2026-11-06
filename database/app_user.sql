@@ -1,34 +1,39 @@
 -- ============================================================================
--- Fitness & Wellness Tracking Database System
--- File:    database/app_user.sql
--- Purpose: Create a dedicated MySQL account for the Flask application.
+-- FitTrack - database account for Aiven Cloud MySQL
+-- File: database/app_user.sql
 --
--- Run this AFTER database/schema.sql, as the MySQL root user:
---   Get-Content .\database\app_user.sql -Raw | mysql -u root -p
+-- AIVEN CLOUD MYSQL
+--   Aiven manages database users from the Aiven console:
+--     Aiven console -> your MySQL service -> Users -> Add user
 --
--- IMPORTANT:
---   1. Change the password below before running this file.
---   2. Use the SAME password in your .env file.
---   3. Never commit the real password to Git.
+--   Create a dedicated user for FitTrack and give it read/write access to the
+--   fitness_wellness_db database. Then put that username and password in .env:
 --
--- The app account only receives the four data permissions it needs.
--- It cannot create, drop, or alter tables.
+--     DB_USER=your-aiven-app-user
+--     DB_PASSWORD=your-aiven-app-password
+--
+--   Do not use the Aiven administrator account in the web application, and do
+--   not create a localhost MySQL account for FitTrack.
+--
+-- OPTIONAL SQL
+--   Some Aiven plans allow the administrator to run user/grant statements from
+--   the Aiven Query editor. If your plan allows it, you may run the statements
+--   below after replacing the placeholder password. This is not required when
+--   you create the user in the console.
+--
+--   Replace 'ChangeMe_StrongPassword_123!' with a long unique password and use
+--   exactly the same value in .env.
 -- ============================================================================
 
-CREATE USER IF NOT EXISTS 'fitness_app'@'localhost'
-    IDENTIFIED BY 'ChangeMe_StrongPassword_123!';
-
-CREATE USER IF NOT EXISTS 'fitness_app'@'127.0.0.1'
-    IDENTIFIED BY 'ChangeMe_StrongPassword_123!';
-
-GRANT SELECT, INSERT, UPDATE, DELETE
-    ON fitness_wellness_db.*
-    TO 'fitness_app'@'localhost';
-
-GRANT SELECT, INSERT, UPDATE, DELETE
-    ON fitness_wellness_db.*
-    TO 'fitness_app'@'127.0.0.1';
-
-FLUSH PRIVILEGES;
-
-SHOW GRANTS FOR 'fitness_app'@'localhost';
+-- Uncomment only if your Aiven plan permits CREATE USER and GRANT.
+--
+-- CREATE USER IF NOT EXISTS 'fitness_app'@'%'
+--     IDENTIFIED BY 'ChangeMe_StrongPassword_123!';
+--
+-- GRANT SELECT, INSERT, UPDATE, DELETE
+--     ON fitness_wellness_db.*
+--     TO 'fitness_app'@'%';
+--
+-- FLUSH PRIVILEGES;
+--
+-- SHOW GRANTS FOR 'fitness_app'@'%';

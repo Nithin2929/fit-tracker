@@ -1,23 +1,25 @@
 -- ============================================================================
 -- Fitness & Wellness Tracking Database System
 -- File:    database/step3_sample_data.sql
--- Purpose: Insert sample workouts, nutrition entries, and health metrics for
---          the first user in your existing users table.
+-- Purpose: OPTIONAL sample workouts, nutrition entries, and health metrics
+--          for the first user in your existing users table.
 --
--- Run AFTER database/step3_tables.sql.
+-- IMPORTANT:
+--   This is a manual demo script only. The Flask application never loads this
+--   file and never invents sample data. Dashboard and reports show only what
+--   real users insert through the app.
 --
--- HOW TO RUN:
---   MySQL Workbench > File > Open SQL Script > database/step3_sample_data.sql
---   Click the lightning bolt (Execute).
---
--- NOTE: Run this sample script once. Running it again will add duplicate
--- workouts and food entries. Health metrics use ON DUPLICATE KEY UPDATE, so
--- those three daily rows are updated instead of duplicated.
+-- AIVEN:
+--   Run AFTER database/aiven_init.sql and after at least one real account has
+--   been registered (or inserted) in the Aiven database.
+--   Run it once; workouts and food entries have no daily unique rule, so a
+--   second run creates duplicates. Health metrics update the same day instead.
 -- ============================================================================
 
 USE fitness_wellness_db;
 
 -- Pick the first existing user. This avoids hard-coding a user_id.
+-- If this returns NULL, register an account in FitTrack first.
 SET @user_id = (SELECT user_id FROM users ORDER BY user_id LIMIT 1);
 
 SELECT @user_id AS sample_user_id;

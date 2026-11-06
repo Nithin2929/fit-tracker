@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Your profile — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Account</span>
+        <h1>Your profile</h1>
+        <p class="page-sub">These details are used for your BMI and reports.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('dashboard.index') }}">Back to dashboard</a>
+      </div>
+    </div>
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Personal details</h2>
+        </div>
+
+        <form class="form-grid" method="post" action="{{ url_for('auth.profile') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="field">
+            <label for="full_name">Full name</label>
+            <input id="full_name" name="full_name" type="text" value="{{ user.full_name }}"
+                   required maxlength="100" autocomplete="name">
+          </div>
+
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" value="{{ user.email }}" readonly>
+            <span class="field-hint">The email used to log in cannot be changed here.</span>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="date_of_birth">Date of birth</label>
+              <input id="date_of_birth" name="date_of_birth" type="date"
+                     value="{{ user.date_of_birth.isoformat() if user.date_of_birth else '' }}">
+            </div>
+            <div class="field">
+              <label for="height_cm">Height in cm</label>
+              <input id="height_cm" name="height_cm" type="number" step="0.01" min="1" max="299"
+                     value="{{ user.height_cm if user.height_cm is not none else '' }}" placeholder="175">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">Prefer not to say</option>
+              {% for option in genders %}
+                <option value="{{ option }}" {{ 'selected' if user.gender == option else '' }}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Save profile</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="panel panel--soft">
+        <div class="panel-head">
+          <h2>Account summary</h2>
+        </div>
+        <dl class="detail-list">
+          <div><dt>Member since</dt><dd>{{ user.created_at|display_date }}</dd></div>
+          <div><dt>Height</dt><dd>{{ user.height_cm|display_number }} <span class="muted">cm</span></dd></div>
+          <div><dt>Date of birth</dt><dd>{{ user.date_of_birth|display_date }}</dd></div>
+          <div><dt>Gender</dt><dd>{{ user.gender or 'Not set' }}</dd></div>
+        </dl>
+        <p class="panel-note">Your records are stored in Aiven Cloud MySQL and are filtered by your user ID.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

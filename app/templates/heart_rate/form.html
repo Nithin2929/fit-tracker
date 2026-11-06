@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Add heart-rate sample — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Heart rate</span>
+        <h1>Add a reading</h1>
+        <p class="page-sub">
+          The zone is calculated from your reading and your estimated maximum
+          heart rate ({{ estimated_max }} bpm).
+        </p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('heart_rate.index') }}">Back to heart rate</a>
+      </div>
+    </div>
+
+    <div class="panel panel--narrow">
+      <form class="form-grid" method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-row">
+          <div class="field">
+            <label for="heart_rate_bpm">Heart rate (BPM)</label>
+            <input id="heart_rate_bpm" name="heart_rate_bpm" type="number" min="20" max="250"
+                   value="{{ form.heart_rate_bpm }}" required placeholder="145">
+            <span class="field-hint">Accepted range: 20–250 BPM.</span>
+          </div>
+          <div class="field">
+            <label for="recorded_at">Recorded at</label>
+            <input id="recorded_at" name="recorded_at" type="datetime-local"
+                   value="{{ form.recorded_at }}" required>
+            <span class="field-hint">Future timestamps are rejected.</span>
+          </div>
+        </div>
+
+        <div class="notice">
+          <strong>How the zone is chosen</strong>
+          <p>
+            Estimated maximum heart rate = 220 − age when your date of birth is
+            known, otherwise 190. The matching shared zone is stored with the
+            reading. A reading below the first zone is stored with no zone rather
+            than a guessed value.
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save sample</button>
+          <a class="btn btn-ghost" href="{{ url_for('heart_rate.index') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

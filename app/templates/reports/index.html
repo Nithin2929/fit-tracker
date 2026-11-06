@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Fitness reports</span>
+        <h1>Your progress reports</h1>
+        <p class="page-sub">Built with SQL joins and aggregate functions on your own Aiven MySQL records.</p>
+      </div>
+    </div>
+
+    <form class="filter-bar" method="get" action="{{ url_for('reports.index') }}">
+      <div class="field">
+        <label for="start">Start date</label>
+        <input id="start" name="start" type="date" value="{{ start.isoformat() }}">
+      </div>
+      <div class="field">
+        <label for="end">End date</label>
+        <input id="end" name="end" type="date" value="{{ end.isoformat() }}">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">Apply range</button>
+        <a class="btn btn-ghost" href="{{ url_for('reports.index') }}">Last 30 days</a>
+      </div>
+    </form>
+
+    <div class="stat-grid stat-grid--tight">
+      <article class="stat-card">
+        <span class="stat-card-label">Workouts in range</span>
+        <span class="stat-card-value">{{ ranges.workouts|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Minutes trained</span>
+        <span class="stat-card-value">{{ ranges.minutes|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Workout calories</span>
+        <span class="stat-card-value">{{ ranges.workout_calories|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Calories eaten</span>
+        <span class="stat-card-value">{{ ranges.food_calories|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Weight change</span>
+        <span class="stat-card-value">
+          {% if weight_change is not none %}{{ '%+.2f'|format(weight_change) }} <small>kg</small>{% else %}—{% endif %}
+        </span>
+        <span class="stat-card-note">Oldest to newest in range</span>
+      </article>
+    </div>
+
+    {% include "_charts.html" %}
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Daily summary</h2>
+          <p class="panel-note">Workouts, food, steps, weight and BMI by day.</p>
+        </div>
+      </div>
+      {% if daily_rows %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th><th>Workouts</th><th>Minutes</th><th>Workout kcal</th>
+                <th>Food kcal</th><th>Steps</th><th>Weight</th><th>BMI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in daily_rows %}
+                <tr>
+                  <td>{{ row.day|display_date }}</td>
+                  <td>{{ row.workouts|display_number }}</td>
+                  <td>{{ row.minutes|display_number }}</td>
+                  <td>{{ row.workout_calories|display_number }}</td>
+                  <td>{{ row.food_calories|display_number }}</td>
+                  <td>{{ row.steps|display_number }}</td>
+                  <td>{{ row.weight|display_number }} kg</td>
+                  <td>{{ row.bmi|display_number }} <span class="muted">{{ row.bmi_label }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state"><p>No activity in this date range.</p></div>
+      {% endif %}
+    </div>
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Weekly workout summary</h2>
+        </div>
+        {% if weekly_workouts %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Week starting</th><th>Sessions</th><th>Minutes</th><th>Calories</th></tr></thead>
+              <tbody>
+                {% for week in weekly_workouts %}
+                  <tr>
+                    <td>{{ week.week_start|display_date }}</td>
+                    <td>{{ week.workouts|display_number }}</td>
+                    <td>{{ week.minutes|display_number }}</td>
+                    <td>{{ week.calories|display_number }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No workouts in this range.</p></div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Monthly fitness summary</h2>
+        </div>
+        {% if monthly_rows %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Month</th><th>Workouts</th><th>Minutes</th><th>Food kcal</th><th>Avg weight</th><th>Avg BMI</th></tr>
+              </thead>
+              <tbody>
+                {% for month in monthly_rows %}
+                  <tr>
+                    <td>{{ month.month }}</td>
+                    <td>{{ month.workouts|display_number }}</td>
+                    <td>{{ month.minutes|display_number }}</td>
+                    <td>{{ month.food_calories|display_number }}</td>
+                    <td>{{ month.average_weight|display_number }} kg</td>
+                    <td>{{ month.average_bmi|display_number }} <span class="muted">{{ month.bmi_label }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No monthly data in this range.</p></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Calorie intake</h2>
+        </div>
+        {% if nutrition_by_day %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr></thead>
+              <tbody>
+                {% for row in nutrition_by_day %}
+                  <tr>
+                    <td>{{ row.day|display_date }}</td>
+                    <td>{{ row.calories|display_number }}</td>
+                    <td>{{ row.protein|display_number }} g</td>
+                    <td>{{ row.carbohydrates|display_number }} g</td>
+                    <td>{{ row.fat|display_number }} g</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No food records in this range.</p></div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Calorie expenditure</h2>
+        </div>
+        {% if daily_rows %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Workout kcal</th><th>Activity kcal</th><th>Total out</th></tr></thead>
+              <tbody>
+                {% for row in daily_rows %}
+                  <tr>
+                    <td>{{ row.day|display_date }}</td>
+                    <td>{{ row.workout_calories|display_number }}</td>
+                    <td>{{ row.activity_calories|display_number }}</td>
+                    <td><strong>{{ row.total_calories_out|display_number }}</strong></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No calorie expenditure in this range.</p></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Weight and BMI history</h2>
+      </div>
+      {% if health_by_day %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Weight</th><th>Height</th><th>BMI</th><th>Category</th><th>Steps</th></tr></thead>
+            <tbody>
+              {% for row in health_by_day %}
+                <tr>
+                  <td>{{ row.day|display_date }}</td>
+                  <td>{{ row.weight|display_number }} kg</td>
+                  <td>{{ row.height|display_number }} cm</td>
+                  <td>{{ row.bmi|display_number }}</td>
+                  <td><span class="badge">{{ row.bmi|bmi_category }}</span></td>
+                  <td>{{ row.steps|display_number }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state"><p>No health records in this range.</p></div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Recorded calorie balance</h2>
+          <p class="panel-note">
+            Simplified recorded balance = recorded intake − recorded expenditure.
+            Expenditure uses the daily health value when recorded, otherwise that
+            day's workouts. It is not a medical or physiological measurement.
+          </p>
+        </div>
+      </div>
+      {% if analytics.calorie_balance.rows %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Date</th><th>Intake</th><th>Health kcal</th>
+                  <th>Workout kcal</th><th>Expenditure used</th><th>Balance</th></tr>
+            </thead>
+            <tbody>
+              {% for row in analytics.calorie_balance.rows %}
+                <tr>
+                  <td>{{ row.day|display_date }}</td>
+                  <td>{{ row.intake|display_number }}</td>
+                  <td>{{ row.activity_calories|display_number }}</td>
+                  <td>{{ row.workout_calories|display_number }}</td>
+                  <td>{{ row.expenditure|display_number }}</td>
+                  <td class="{{ 'text-positive' if row.balance >= 0 else 'text-negative' }}">
+                    {{ '%+.1f'|format(row.balance) }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="panel-note">
+          Range totals: intake {{ analytics.calorie_balance.total_intake|display_number }} kcal,
+          expenditure {{ analytics.calorie_balance.total_expenditure|display_number }} kcal,
+          balance {{ '%+.1f'|format(analytics.calorie_balance.total_balance) }} kcal.
+        </p>
+      {% else %}
+        <div class="empty-state"><p>No nutrition, workout, or health records in this range.</p></div>
+      {% endif %}
+    </div>
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Nutrition summary</h2>
+            <p class="panel-note">Average per logged day in this range.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <tbody>
+              <tr><th>Entries</th><td>{{ analytics.nutrition.entries }}</td></tr>
+              <tr><th>Logged days</th><td>{{ analytics.nutrition.logged_days }}</td></tr>
+              <tr><th>Total calories</th><td>{{ analytics.nutrition.calories|display_number }} kcal</td></tr>
+              <tr><th>Average calories</th><td>{{ analytics.nutrition.average_calories|display_number }} kcal</td></tr>
+              <tr><th>Total protein</th><td>{{ analytics.nutrition.protein|display_number }} g</td></tr>
+              <tr><th>Total carbohydrates</th><td>{{ analytics.nutrition.carbohydrates|display_number }} g</td></tr>
+              <tr><th>Total fat</th><td>{{ analytics.nutrition.fat|display_number }} g</td></tr>
+              <tr><th>Macro energy split</th>
+                  <td>{{ analytics.nutrition.ratios.protein_pct }}% /
+                      {{ analytics.nutrition.ratios.carbohydrates_pct }}% /
+                      {{ analytics.nutrition.ratios.fat_pct }}%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Workout category summary</h2>
+            <p class="panel-note">
+              {% if capabilities.exercises %}
+                Categories come from the exercise catalogue.
+              {% else %}
+                The exercise catalogue is not applied yet, so categories use the
+                legacy free-text exercise field.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        {% if capabilities.exercises and analytics.workouts.exercise_analytics.categories %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Category</th><th>Entries</th><th>Minutes</th><th>Calories</th></tr></thead>
+              <tbody>
+                {% for row in analytics.workouts.exercise_analytics.categories %}
+                  <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.entries }}</td>
+                    <td>{{ row.minutes|display_number }}</td>
+                    <td>{{ row.calories|display_number }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% elif analytics.workouts.top_exercises %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Exercise label</th><th>Sessions</th><th>Minutes</th><th>Calories</th></tr></thead>
+              <tbody>
+                {% for row in analytics.workouts.top_exercises %}
+                  <tr>
+                    <td>{{ row.exercise_name }}</td>
+                    <td>{{ row.sessions }}</td>
+                    <td>{{ row.minutes }}</td>
+                    <td>{{ row.calories }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No workout history yet.</p></div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if capabilities.exercises %}
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Exercise performance</h2>
+            <p class="panel-note">Volume = sets × repetitions × weight, from recorded exercise lines.</p>
+          </div>
+        </div>
+        {% if analytics.workouts.exercise_analytics.performance %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Exercise</th><th>Group</th><th>Type</th><th>Entries</th>
+                    <th>Sets</th><th>Reps</th><th>Max weight</th><th>Volume</th><th>Calories</th></tr>
+              </thead>
+              <tbody>
+                {% for row in analytics.workouts.exercise_analytics.performance %}
+                  <tr>
+                    <td>{{ row.exercise_name }}</td>
+                    <td>{{ row.muscle_group or '—' }}</td>
+                    <td><span class="badge">{{ row.exercise_type }}</span></td>
+                    <td>{{ row.entries }}</td>
+                    <td>{{ row.total_sets }}</td>
+                    <td>{{ row.total_repetitions }}</td>
+                    <td>{{ row.max_weight_kg|display_number }} kg</td>
+                    <td>{{ row.volume_kg|display_number }} kg</td>
+                    <td>{{ row.calories }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No exercise lines recorded yet.</p></div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if capabilities.heart_rate %}
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Heart-rate zones</h2>
+            <p class="panel-note">Recorded samples in the last 30 days, grouped by shared zone reference data.</p>
+          </div>
+          <a class="link-accent" href="{{ url_for('heart_rate.index') }}">Add a sample</a>
+        </div>
+        {% if analytics.heart_rate.samples %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Zone</th><th>Samples</th><th>Average BPM</th><th>Min</th><th>Max</th></tr></thead>
+              <tbody>
+                {% for zone in analytics.heart_rate.zones %}
+                  <tr>
+                    <td>{{ zone.zone_name }}</td>
+                    <td>{{ zone.samples }}</td>
+                    <td>{{ zone.average_bpm|display_number }}</td>
+                    <td>{{ zone.minimum_bpm|display_number }}</td>
+                    <td>{{ zone.maximum_bpm|display_number }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state"><p>No heart-rate samples recorded in this window.</p></div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

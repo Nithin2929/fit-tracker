@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — FitTrack{% endblock %}
+{% block description %}Your live workout, nutrition, step, weight and BMI summary from Aiven Cloud MySQL.{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Dashboard</span>
+        <h1>Hello, {{ current_user.full_name.split()[0] }}</h1>
+        <p class="page-sub">Every number here comes from your own records in Aiven Cloud MySQL.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('reports.index') }}">View reports</a>
+        <a class="btn btn-primary" href="{{ url_for('workouts.create') }}">Add workout</a>
+      </div>
+    </div>
+
+    {% set steps_value = today_health.steps if today_health else (latest_health.steps if latest_health else 0) %}
+    <div class="stat-grid dashboard-stat-grid">
+      <article class="stat-card">
+        <span class="stat-card-label">Total workouts</span>
+        <span class="stat-card-value">{{ workout_totals.total_workouts|display_number }}</span>
+        <span class="stat-card-note">All recorded sessions</span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card-label">Workout duration</span>
+        <span class="stat-card-value">{{ workout_totals.total_minutes|display_number }} <small>min</small></span>
+        <span class="stat-card-note">Total time trained</span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card-label">Calories burned</span>
+        <span class="stat-card-value">{{ workout_totals.total_calories|display_number }}</span>
+        <span class="stat-card-note">From workout records</span>
+      </article>
+
+      <article class="stat-card stat-card--accent">
+        <span class="stat-card-label">Calories eaten today</span>
+        <span class="stat-card-value">{{ today_nutrition.calories|display_number }}</span>
+        <span class="stat-card-note">Today's nutrition logs</span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card-label">Steps</span>
+        <span class="stat-card-value">{{ steps_value|display_number }}</span>
+        <span class="stat-card-note">
+          {% if today_health %}Today{% elif latest_health %}Latest {{ latest_health.recorded_date|display_date }}{% else %}No health record yet{% endif %}
+        </span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card-label">Latest weight</span>
+        <span class="stat-card-value">
+          {% if latest_health %}{{ latest_health.weight|display_number }} <small>kg</small>{% else %}—{% endif %}
+        </span>
+        <span class="stat-card-note">
+          {% if latest_health %}{{ latest_health.recorded_date|display_date }}{% else %}Add a health record{% endif %}
+        </span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card-label">BMI</span>
+        <span class="stat-card-value">{% if bmi %}{{ bmi }}{% else %}—{% endif %}</span>
+        <span class="stat-card-note">{{ bmi_label }}</span>
+      </article>
+    </div>
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Recent workouts</h2>
+            <p class="panel-note">Your five latest sessions.</p>
+          </div>
+          <a class="link-accent" href="{{ url_for('workouts.index') }}">All workouts</a>
+        </div>
+
+        {% if recent_workouts %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Date</th><th>Exercise</th><th>Duration</th><th>Calories</th></tr>
+              </thead>
+              <tbody>
+                {% for workout in recent_workouts %}
+                  <tr>
+                    <td>{{ workout.workout_date|display_date }}</td>
+                    <td>{{ workout.exercise_list if workout.exercise_list else workout.exercise_name }}</td>
+                    <td>{{ workout.duration_minutes }} min</td>
+                    <td>{{ workout.calories_burned|display_number }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <strong>No workouts yet</strong>
+            <p>Your first workout will appear here.</p>
+            <a class="btn btn-primary" href="{{ url_for('workouts.create') }}">Add a workout</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Recent nutrition</h2>
+            <p class="panel-note">Your five latest food entries.</p>
+          </div>
+          <a class="link-accent" href="{{ url_for('nutrition.index') }}">All nutrition</a>
+        </div>
+
+        {% if recent_nutrition %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Date</th><th>Food</th><th>Meal</th><th>Calories</th></tr>
+              </thead>
+              <tbody>
+                {% for log in recent_nutrition %}
+                  <tr>
+                    <td>{{ log.log_date|display_date }}</td>
+                    <td>{{ log.food_name }}</td>
+                    <td><span class="badge">{{ log.meal_type }}</span></td>
+                    <td>{{ log.calories|display_number }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <strong>No nutrition records yet</strong>
+            <p>Log a meal to see your daily intake.</p>
+            <a class="btn btn-primary" href="{{ url_for('nutrition.create') }}">Add food</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% include "_charts.html" %}
+
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Recorded calorie balance</h2>
+            <p class="panel-note">Last 30 days. This is a simplified record, not a medical measurement.</p>
+          </div>
+        </div>
+        <div class="stat-grid stat-grid--tight">
+          <article class="stat-card">
+            <span class="stat-card-label">Recorded intake</span>
+            <span class="stat-card-value">{{ analytics.calorie_balance.total_intake|display_number }}</span>
+            <span class="stat-card-note">Calories eaten</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-card-label">Recorded expenditure</span>
+            <span class="stat-card-value">{{ analytics.calorie_balance.total_expenditure|display_number }}</span>
+            <span class="stat-card-note">Health total or workouts, one source per day</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-card-label">Balance</span>
+            <span class="stat-card-value">
+              {% if analytics.calorie_balance.total_balance > 0 %}+{% endif %}{{ analytics.calorie_balance.total_balance|display_number }}
+            </span>
+            <span class="stat-card-note">Intake − expenditure</span>
+          </article>
+        </div>
+        <p class="panel-note">
+          Expenditure uses the daily health record when one exists for that day;
+          otherwise it uses that day's workouts. Unrecorded activity is not estimated.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Nutrition averages</h2>
+            <p class="panel-note">Last {{ analytics.nutrition.window_days }} days with food records.</p>
+          </div>
+          <a class="link-accent" href="{{ url_for('nutrition.index') }}">All nutrition</a>
+        </div>
+        {% if analytics.nutrition.logged_days %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <tbody>
+                <tr><th>Average calories</th><td>{{ analytics.nutrition.average_calories|display_number }} kcal</td></tr>
+                <tr><th>Average protein</th><td>{{ analytics.nutrition.average_protein|display_number }} g</td></tr>
+                <tr><th>Macro energy split</th>
+                    <td>{{ analytics.nutrition.ratios.protein_pct }}% protein ·
+                        {{ analytics.nutrition.ratios.carbohydrates_pct }}% carbs ·
+                        {{ analytics.nutrition.ratios.fat_pct }}% fat</td></tr>
+                <tr><th>Logged days</th><td>{{ analytics.nutrition.logged_days }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <strong>No nutrition history yet</strong>
+            <p>Your macro ratios are calculated from recorded grams (4/4/9 kcal).</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if not capabilities.exercises or not capabilities.heart_rate %}
+      <div class="notice">
+        <strong>Optional migrations pending</strong>
+        <p>
+          {% if not capabilities.exercises %}
+            Multi-exercise workouts are designed but the <code>exercises</code> tables are not applied yet
+            (<code>database/migration_exercises.sql</code>).
+          {% endif %}
+          {% if not capabilities.heart_rate %}
+            Time-based heart-rate samples are designed but not applied yet
+            (<code>database/migration_heart_rate.sql</code>).
+          {% endif %}
+          The current pages keep working with the live four-table schema.
+        </p>
+      </div>
+    {% endif %}
+
+    {% if not latest_health %}
+      <div class="notice">
+        <strong>Add your first health record</strong>
+        <p>Weight, height, steps and calories burned unlock your BMI and health reports.</p>
+        <a class="btn btn-outline" href="{{ url_for('health.create') }}">Add health metrics</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

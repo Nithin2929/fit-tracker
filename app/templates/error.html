@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — FitTrack{% endblock %}
+{% block description %}{{ message }}{% endblock %}
+
+{% block content %}
+<section class="soon-wrap">
+  <div class="container">
+    <div class="soon-card">
+      <span class="soon-code">{{ code }}</span>
+      <span class="eyebrow">FitTrack</span>
+      <h1>{{ title }}</h1>
+      <p>{{ message }}</p>
+      {% if hint %}
+        <p class="error-hint">{{ hint }}</p>
+      {% endif %}
+
+      <div class="soon-actions">
+        <a class="btn btn-primary" href="{{ url_for('main.home') }}">Back to home</a>
+        {% if current_user %}
+          <a class="btn btn-outline" href="{{ url_for('dashboard.index') }}">Open dashboard</a>
+        {% else %}
+          <a class="btn btn-outline" href="{{ url_for('auth.login') }}">Log in</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

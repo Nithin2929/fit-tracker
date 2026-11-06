@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Heart rate — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Heart rate</span>
+        <h1>Heart-rate samples</h1>
+        <p class="page-sub">
+          Time-stamped readings stored separately from your daily health snapshot.
+        </p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('health.index') }}">Health metrics</a>
+        {% if available %}
+          <a class="btn btn-primary" href="{{ url_for('heart_rate.create') }}">Add sample</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if not available %}
+      <div class="panel">
+        <div class="notice">
+          <strong>Migration required</strong>
+          <p>{{ notice }}</p>
+          <p class="field-hint">
+            No heart-rate values are invented or preloaded. The samples table
+            starts empty when the migration is approved and applied.
+          </p>
+        </div>
+      </div>
+    {% else %}
+      <div class="stat-grid stat-grid--tight">
+        <article class="stat-card">
+          <span class="stat-card-label">Samples</span>
+          <span class="stat-card-value">{{ summary.samples|display_number }}</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Average BPM</span>
+          <span class="stat-card-value">{{ summary.average_bpm|display_number }}</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Range</span>
+          <span class="stat-card-value">
+            {{ summary.minimum_bpm|display_number }}–{{ summary.maximum_bpm|display_number }}
+          </span>
+          <span class="stat-card-note">Minimum to maximum BPM</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Estimated max HR</span>
+          <span class="stat-card-value">{{ estimated_max }} <small>bpm</small></span>
+          <span class="stat-card-note">220 − age, fallback 190</span>
+        </article>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Recent samples</h2>
+            <p class="panel-note">Your 50 latest readings. Only you can see or delete them.</p>
+          </div>
+        </div>
+        {% if samples %}
+          <div class="table-wrap">
+            <table class="data-table data-table--actions">
+              <thead>
+                <tr><th>Recorded at</th><th>BPM</th><th>Zone</th><th class="right">Actions</th></tr>
+              </thead>
+              <tbody>
+                {% for sample in samples %}
+                  <tr>
+                    <td>{{ sample.recorded_at.strftime('%d %b %Y %H:%M') }}</td>
+                    <td><strong>{{ sample.heart_rate_bpm }}</strong></td>
+                    <td>
+                      {% if sample.zone_name %}
+                        <span class="badge">{{ sample.zone_name }}</span>
+                        <span class="muted">{{ sample.minimum_percentage }}–{{ sample.maximum_percentage }}%</span>
+                      {% else %}
+                        <span class="muted">No matching zone</span>
+                      {% endif %}
+                    </td>
+                    <td class="right">
+                      <form method="post"
+                            action="{{ url_for('heart_rate.delete', sample_id=sample.sample_id) }}"
+                            onsubmit="return confirm('Delete this heart-rate sample?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="link-danger" type="submit">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <strong>No heart-rate samples</strong>
+            <p>Record a reading to see how it maps to your shared heart-rate zones.</p>
+            <a class="btn btn-primary" href="{{ url_for('heart_rate.create') }}">Add your first sample</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Zone reference data</h2>
+            <p class="panel-note">
+              Percentages of your estimated maximum heart rate. Zones are shared
+              reference rows, applied per user at write time.
+            </p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Zone</th><th>Minimum %</th><th>Maximum %</th><th>Approx. BPM for you</th></tr></thead>
+            <tbody>
+              {% for zone in zones %}
+                <tr>
+                  <td><span class="badge">{{ zone.zone_name }}</span></td>
+                  <td>{{ zone.minimum_percentage }}%</td>
+                  <td>{{ zone.maximum_percentage }}%</td>
+                  <td>
+                    {{ (zone.minimum_percentage * estimated_max / 100)|round(0, 'floor')|int }}–{{ (zone.maximum_percentage * estimated_max / 100)|round(0, 'floor')|int }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

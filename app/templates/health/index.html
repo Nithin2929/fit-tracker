@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Health metrics — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Health metrics</span>
+        <h1>Your health records</h1>
+        <p class="page-sub">One record per day. BMI is calculated from your weight and height.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('heart_rate.index') }}">Heart-rate samples</a>
+        <a class="btn btn-primary" href="{{ url_for('health.create') }}">Add health record</a>
+      </div>
+    </div>
+
+    {% if latest %}
+      <div class="stat-grid stat-grid--tight">
+        <article class="stat-card">
+          <span class="stat-card-label">Latest weight</span>
+          <span class="stat-card-value">{{ latest.weight|display_number }} <small>kg</small></span>
+          <span class="stat-card-note">{{ latest.recorded_date|display_date }}</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Height</span>
+          <span class="stat-card-value">{{ latest.height|display_number }} <small>cm</small></span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">BMI</span>
+          <span class="stat-card-value">{{ latest.bmi|display_number }}</span>
+          <span class="stat-card-note">{{ latest.bmi_label }}</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Steps</span>
+          <span class="stat-card-value">{{ latest.steps|display_number }}</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-card-label">Activity calories</span>
+          <span class="stat-card-value">{{ latest.calories_burned|display_number }}</span>
+        </article>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Health history</h2>
+      </div>
+
+      {% if metrics %}
+        <div class="table-wrap">
+          <table class="data-table data-table--actions">
+            <thead>
+              <tr>
+                <th>Date</th><th>Weight</th><th>Height</th><th>Steps</th>
+                <th>Calories burned</th><th>BMI</th><th>Category</th><th class="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for metric in metrics %}
+                <tr>
+                  <td>{{ metric.recorded_date|display_date }}</td>
+                  <td>{{ metric.weight|display_number }} kg</td>
+                  <td>{{ metric.height|display_number }} cm</td>
+                  <td>{{ metric.steps|display_number }}</td>
+                  <td>{{ metric.calories_burned|display_number }}</td>
+                  <td><strong>{{ metric.bmi|display_number }}</strong></td>
+                  <td><span class="badge">{{ metric.bmi_label }}</span></td>
+                  <td class="right">
+                    <div class="row-actions">
+                      <a class="link-quiet" href="{{ url_for('health.edit', metric_id=metric.metric_id) }}">Edit</a>
+                      <form method="post" action="{{ url_for('health.delete', metric_id=metric.metric_id) }}"
+                            onsubmit="return confirm('Delete this health record?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="link-danger" type="submit">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <strong>No health records</strong>
+          <p>Add your weight and height to see your BMI and progress.</p>
+          <a class="btn btn-primary" href="{{ url_for('health.create') }}">Add your first health record</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

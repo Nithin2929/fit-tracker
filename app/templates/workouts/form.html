@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit workout' if mode == 'edit' else 'Add workout' }} — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Workout tracking</span>
+        <h1>{{ 'Edit workout' if mode == 'edit' else 'Add a workout' }}</h1>
+        <p class="page-sub">Only your own records are saved.</p>
+      </div>
+      <div class="page-actions">
+        {% if exercise_feature %}
+          <a class="btn btn-outline" href="{{ url_for('exercises.index') }}">Manage exercises</a>
+        {% endif %}
+        <a class="btn btn-outline" href="{{ url_for('workouts.index') }}">Back to workouts</a>
+      </div>
+    </div>
+
+    <div class="panel panel--narrow">
+      <form class="form-grid" method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field">
+          <label for="exercise_name">
+            Session label
+            {% if exercise_feature %}<span class="field-hint">(optional when exercises are selected)</span>{% endif %}
+          </label>
+          <input id="exercise_name" name="exercise_name" type="text" maxlength="100"
+                 value="{{ form.exercise_name }}" {% if not exercise_feature %}required{% endif %}
+                 placeholder="Running, Weight Training, Cycling">
+          {% if exercise_feature %}
+            <span class="field-hint">
+              Kept for the legacy label and older reports. The exercise checklist
+              below stores the structured exercise records.
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="duration_minutes">Session duration (minutes)</label>
+            <input id="duration_minutes" name="duration_minutes" type="number" min="1" max="1440"
+                   value="{{ form.duration_minutes }}" required placeholder="45">
+          </div>
+          <div class="field">
+            <label for="calories_burned">Session calories burned <span class="field-hint">(optional)</span></label>
+            <input id="calories_burned" name="calories_burned" type="number" min="0" max="10000"
+                   value="{{ form.calories_burned }}" placeholder="300">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="workout_date">Workout date</label>
+          <input id="workout_date" name="workout_date" type="date" value="{{ form.workout_date }}" required>
+        </div>
+
+        {% if exercise_feature %}
+          {% set row_count = workout_exercises|length if workout_exercises else 1 %}
+          <fieldset class="exercise-fieldset">
+            <legend>Exercises in this session <span class="field-hint">(optional)</span></legend>
+            <p class="field-hint">
+              Add one row per exercise. The workout and all its exercise rows are
+              saved in a single transaction, so a failure rolls back everything.
+            </p>
+
+            <div class="exercise-rows" data-exercise-rows>
+              {% for index in range(row_count) %}
+                {% set row = workout_exercises[index] if workout_exercises and index < workout_exercises|length else none %}
+                <div class="exercise-row" data-exercise-row>
+                  <div class="field">
+                    <label>Exercise</label>
+                    <select name="exercise_id">
+                      <option value="">— none —</option>
+                      {% for option in exercise_options %}
+                        <option value="{{ option.exercise_id }}"
+                          {{ 'selected' if row and row.exercise_id == option.exercise_id else '' }}>
+                          {{ option.exercise_name }} ({{ option.exercise_type }})
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Sets</label>
+                    <input name="sets" type="number" min="1" max="100"
+                           value="{{ row.sets if row and row.sets is not none else '' }}" placeholder="3">
+                  </div>
+                  <div class="field">
+                    <label>Reps</label>
+                    <input name="repetitions" type="number" min="1" max="1000"
+                           value="{{ row.repetitions if row and row.repetitions is not none else '' }}" placeholder="10">
+                  </div>
+                  <div class="field">
+                    <label>Weight (kg)</label>
+                    <input name="weight_kg" type="number" min="0" max="1000" step="0.01"
+                           value="{{ row.weight_kg if row and row.weight_kg is not none else '' }}" placeholder="40">
+                  </div>
+                  <div class="field">
+                    <label>Minutes</label>
+                    <input name="exercise_duration_minutes" type="number" min="1" max="1440"
+                           value="{{ row.duration_minutes if row and row.duration_minutes is not none else '' }}" placeholder="10">
+                  </div>
+                  <div class="field">
+                    <label>Calories</label>
+                    <input name="exercise_calories_burned" type="number" min="0" max="10000"
+                           value="{{ row.calories_burned if row and row.calories_burned is not none else '' }}" placeholder="60">
+                  </div>
+                  <button class="btn btn-ghost exercise-remove" type="button" data-remove-exercise>
+                    Remove
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+
+            <button class="btn btn-outline" type="button" data-add-exercise
+                    data-max-rows="{{ max_exercise_rows }}">
+              Add another exercise
+            </button>
+          </fieldset>
+
+          <template id="exercise-row-template">
+            <div class="exercise-row" data-exercise-row>
+              <div class="field">
+                <label>Exercise</label>
+                <select name="exercise_id">
+                  <option value="">— none —</option>
+                  {% for option in exercise_options %}
+                    <option value="{{ option.exercise_id }}">{{ option.exercise_name }} ({{ option.exercise_type }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="field">
+                <label>Sets</label>
+                <input name="sets" type="number" min="1" max="100" placeholder="3">
+              </div>
+              <div class="field">
+                <label>Reps</label>
+                <input name="repetitions" type="number" min="1" max="1000" placeholder="10">
+              </div>
+              <div class="field">
+                <label>Weight (kg)</label>
+                <input name="weight_kg" type="number" min="0" max="1000" step="0.01" placeholder="40">
+              </div>
+              <div class="field">
+                <label>Minutes</label>
+                <input name="exercise_duration_minutes" type="number" min="1" max="1440" placeholder="10">
+              </div>
+              <div class="field">
+                <label>Calories</label>
+                <input name="exercise_calories_burned" type="number" min="0" max="10000" placeholder="60">
+              </div>
+              <button class="btn btn-ghost exercise-remove" type="button" data-remove-exercise>
+                Remove
+              </button>
+            </div>
+          </template>
+        {% else %}
+          <div class="notice">
+            <strong>Multi-exercise workouts need one migration</strong>
+            <p>
+              This form currently stores the original single-exercise workout.
+              The normalized <code>exercises</code> and <code>workout_exercises</code>
+              tables are ready in <code>database/migration_exercises.sql</code> but
+              have not been applied to the live database.
+            </p>
+          </div>
+        {% endif %}
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">{{ 'Save changes' if mode == 'edit' else 'Add workout' }}</button>
+          <a class="btn btn-ghost" href="{{ url_for('workouts.index') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {% if exercise_feature %}
+    <script src="{{ url_for('static', filename='js/workout-form.js') }}" defer></script>
+  {% endif %}
+{% endblock %}

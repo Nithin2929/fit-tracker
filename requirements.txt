@@ -1,8 +1,14 @@
 # Backend web framework
 Flask>=3.0,<4.0
 
-# Official Oracle driver for MySQL
+# Official Oracle driver for MySQL / Aiven MySQL
 mysql-connector-python>=9.0,<10.0
+
+# Required by MySQL Connector/Python for caching_sha2_password authentication
+cryptography>=42,<47
 
 # Loads variables from the local .env file
 python-dotenv>=1.0,<2.0
+
+# Cross-platform production WSGI server (used instead of Flask debug server)
+waitress>=3.0,<4.0

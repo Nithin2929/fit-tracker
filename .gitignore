@@ -11,10 +11,19 @@ dist/
 venv/
 env/
 
-# Local secrets - never commit this file
+# Local secrets - never commit these files
 .env
+.env.*
+!.env.example
 
-# Flask instance folder (uploads, local database files, etc.)
+# Aiven TLS certificates and any private key material
+certs/*.pem
+certs/*.crt
+certs/*.key
+certs/*.pfx
+certs/*.p12
+
+# Flask instance folder (uploads, local files, etc.)
 instance/
 
 # Testing and tools

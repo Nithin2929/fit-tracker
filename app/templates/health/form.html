@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit health record' if mode == 'edit' else 'Add health record' }} — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Health metrics</span>
+        <h1>{{ 'Edit health record' if mode == 'edit' else 'Add a health record' }}</h1>
+        <p class="page-sub">
+          There is one record per date. Adding the same date again updates that day.
+        </p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="{{ url_for('health.index') }}">Back to health</a>
+      </div>
+    </div>
+
+    <div class="panel panel--narrow">
+      <form class="form-grid" method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-row">
+          <div class="field">
+            <label for="weight">Weight (kg)</label>
+            <input id="weight" name="weight" type="number" step="0.01" min="0.1" max="499.99"
+                   value="{{ form.weight }}" required placeholder="70.50">
+          </div>
+          <div class="field">
+            <label for="height">Height (cm)</label>
+            <input id="height" name="height" type="number" step="0.01" min="0.1" max="299.99"
+                   value="{{ form.height }}" required placeholder="175.00">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="recorded_date">Recorded date</label>
+          <input id="recorded_date" name="recorded_date" type="date" value="{{ form.recorded_date }}" required>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="steps">Steps <span class="field-hint">(optional)</span></label>
+            <input id="steps" name="steps" type="number" min="0" max="200000"
+                   value="{{ form.steps }}" placeholder="8000">
+          </div>
+          <div class="field">
+            <label for="calories_burned">Calories burned <span class="field-hint">(optional)</span></label>
+            <input id="calories_burned" name="calories_burned" type="number" min="0" max="10000"
+                   value="{{ form.calories_burned }}" placeholder="250">
+          </div>
+        </div>
+
+        <p class="form-note">
+          BMI = weight in kg ÷ (height in metres × height in metres). It is calculated automatically.
+        </p>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">{{ 'Save changes' if mode == 'edit' else 'Save health record' }}</button>
+          <a class="btn btn-ghost" href="{{ url_for('health.index') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

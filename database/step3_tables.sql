@@ -3,37 +3,39 @@
 -- File:    database/step3_tables.sql
 -- Step 3: Create the workouts, nutrition_logs, and health_metrics tables.
 --
+-- AIVEN CLOUD MYSQL:
+--   Run this against your online Aiven database, not a local MySQL server.
+--   For a fresh Aiven database, database/aiven_init.sql creates all four
+--   tables (including users). This file is for an Aiven database where the
+--   users table already exists.
+--
 -- IMPORTANT:
 --   Your existing users table was created earlier. This script does NOT create
 --   or change the users table. It only adds three child tables that point to it.
 --
--- BEFORE RUNNING:
---   Run this check in MySQL Workbench:
+--   Run this check first:
 --
 --   SHOW CREATE TABLE users;
 --
---   Look at the user_id line. It will normally be:
---       `user_id` int NOT NULL AUTO_INCREMENT
---
---   The three tables below use INT for user_id, which matches a normal
---   `int` column. If your users.user_id is `int unsigned`, change every
---   `user_id INT NOT NULL` below to `user_id INT UNSIGNED NOT NULL`.
+--   The three tables below use INT UNSIGNED for user_id, matching the original
+--   FitTrack schema. If your users.user_id is signed `int`, change every
+--   `user_id ... INT UNSIGNED NOT NULL` below to `INT NOT NULL`.
 --
 -- HOW TO RUN:
---   MySQL Workbench > File > Open SQL Script > database/step3_tables.sql
---   Click the lightning bolt (Execute).
+--   Connect to Aiven with the mysql client and select fitness_wellness_db, then
+--   run this file. Example:
+--     mysql --host YOUR_HOST --port YOUR_PORT --user YOUR_USER --password \
+--           --ssl-ca certs/ca.pem fitness_wellness_db < database/step3_tables.sql
 -- ============================================================================
 
 USE fitness_wellness_db;
 
 -- ----------------------------------------------------------------------------
 -- Check the exact type of users.user_id before creating the foreign keys.
--- Expected result: int
--- If it says int unsigned, read the IMPORTANT note above.
 -- ----------------------------------------------------------------------------
 SELECT column_name, column_type
 FROM information_schema.columns
-WHERE table_schema = 'fitness_wellness_db'
+WHERE table_schema = DATABASE()
   AND table_name = 'users'
   AND column_name = 'user_id';
 
@@ -44,8 +46,8 @@ WHERE table_schema = 'fitness_wellness_db'
 -- A user can have many workouts, so this is a one-to-many relationship.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS workouts (
-    workout_id       INT          NOT NULL AUTO_INCREMENT,
-    user_id          INT          NOT NULL,
+    workout_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id          INT UNSIGNED NOT NULL,
     exercise_name    VARCHAR(100) NOT NULL,
     duration_minutes INT UNSIGNED NOT NULL,
     calories_burned  INT UNSIGNED NULL,
@@ -80,8 +82,8 @@ CREATE TABLE IF NOT EXISTS workouts (
 -- A user can log many foods on the same day, so there is no daily unique key.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS nutrition_logs (
-    nutrition_id  INT          NOT NULL AUTO_INCREMENT,
-    user_id       INT          NOT NULL,
+    nutrition_id  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id       INT UNSIGNED NOT NULL,
     food_name     VARCHAR(120) NOT NULL,
     meal_type     ENUM('Breakfast', 'Lunch', 'Dinner', 'Snack') NOT NULL,
     calories      INT UNSIGNED NOT NULL,
@@ -126,8 +128,8 @@ CREATE TABLE IF NOT EXISTS nutrition_logs (
 --   BMI = weight / ((height / 100) * (height / 100))
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS health_metrics (
-    metric_id       INT          NOT NULL AUTO_INCREMENT,
-    user_id         INT          NOT NULL,
+    metric_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id         INT UNSIGNED NOT NULL,
     weight          DECIMAL(5,2) NOT NULL,
     height          DECIMAL(5,2) NOT NULL,
     steps           INT UNSIGNED NOT NULL DEFAULT 0,

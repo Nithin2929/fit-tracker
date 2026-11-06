@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition — FitTrack{% endblock %}
+{% block body_class %}page-app{% endblock %}
+
+{% block content %}
+<section class="app-section">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Nutrition tracking</span>
+        <h1>Your nutrition log</h1>
+        <p class="page-sub">Meals, calories and macros from your own Aiven MySQL records.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-primary" href="{{ url_for('nutrition.create') }}">Add food record</a>
+      </div>
+    </div>
+
+    <div class="stat-grid stat-grid--tight">
+      <article class="stat-card">
+        <span class="stat-card-label">Food entries</span>
+        <span class="stat-card-value">{{ totals.count|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Total calories</span>
+        <span class="stat-card-value">{{ totals.calories|display_number }}</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Protein</span>
+        <span class="stat-card-value">{{ totals.protein|display_number }} <small>g</small></span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Carbohydrates</span>
+        <span class="stat-card-value">{{ totals.carbohydrates|display_number }} <small>g</small></span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card-label">Fat</span>
+        <span class="stat-card-value">{{ totals.fat|display_number }} <small>g</small></span>
+      </article>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Food history</h2>
+      </div>
+
+      {% if logs %}
+        <div class="table-wrap">
+          <table class="data-table data-table--actions">
+            <thead>
+              <tr>
+                <th>Date</th><th>Meal</th><th>Food</th><th>Calories</th>
+                <th>Protein</th><th>Carbs</th><th>Fat</th><th class="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+                <tr>
+                  <td>{{ log.log_date|display_date }}</td>
+                  <td><span class="badge">{{ log.meal_type }}</span></td>
+                  <td>{{ log.food_name }}</td>
+                  <td>{{ log.calories|display_number }}</td>
+                  <td>{{ log.protein|display_number }} g</td>
+                  <td>{{ log.carbohydrates|display_number }} g</td>
+                  <td>{{ log.fat|display_number }} g</td>
+                  <td class="right">
+                    <div class="row-actions">
+                      <a class="link-quiet" href="{{ url_for('nutrition.edit', nutrition_id=log.nutrition_id) }}">Edit</a>
+                      <form method="post" action="{{ url_for('nutrition.delete', nutrition_id=log.nutrition_id) }}"
+                            onsubmit="return confirm('Delete this nutrition record?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="link-danger" type="submit">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <strong>No nutrition records</strong>
+          <p>Add breakfast, lunch, dinner or a snack to start tracking.</p>
+          <a class="btn btn-primary" href="{{ url_for('nutrition.create') }}">Add your first food record</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
